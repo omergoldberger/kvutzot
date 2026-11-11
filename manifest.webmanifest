@@ -1,0 +1,15 @@
+{
+  "name": "מחלק הקבוצות",
+  "short_name": "קבוצות",
+  "description": "מחלק קבוצות לכיתה, עם הורדה ל-Word",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f2f6f7",
+  "theme_color": "#0e6b75",
+  "icons": [
+    {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+  ]
+}

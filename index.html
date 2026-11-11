@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e6b75">
+<meta name="description" content="מחלק קבוצות חינמי לכיתה: מדביקים רשימת שמות ומקבלים חלוקה הוגנת לקבוצות, עם הורדה לקובץ Word.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>מחלק הקבוצות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=Secular+One&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a calm classroom worksheet. Setup cards on top, result board below, one teal accent with a sun-yellow highlight. */
+:root{
+  --bg:#f2f6f7; --card:#ffffff; --ink:#14232e; --mut:#586a76; --line:#d6e0e6;
+  --pri:#0e6b75; --pri-ink:#ffffff; --sun:#f2b705; --soft:#e6f1f3;
+  --gl:94%; --gs:70%; --gb:42%; --gt:#14232e;
+  --font:"Rubik","Heebo","Assistant",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --display:"Secular One","Rubik",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1a21; --card:#15252e; --ink:#e8f1f5; --mut:#93a6b2; --line:#2a414e;
+    --pri:#45b8c4; --pri-ink:#04262b; --sun:#f2c230; --soft:#1c3440;
+    --gl:22%; --gs:35%; --gb:62%; --gt:#eef5f8; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1a21; --card:#15252e; --ink:#e8f1f5; --mut:#93a6b2; --line:#2a414e;
+  --pri:#45b8c4; --pri-ink:#04262b; --sun:#f2c230; --soft:#1c3440;
+  --gl:22%; --gs:35%; --gb:62%; --gt:#eef5f8; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;min-height:100%}
+.wrap{max-width:1000px;margin:0 auto;padding:20px 16px 64px;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-direction:column;gap:2px;padding-top:4px}
+h1{font-family:var(--display);font-weight:400;font-size:34px;margin:0;line-height:1.15;text-wrap:balance}
+.sub{margin:0;color:var(--mut)}
+h2{font-size:17px;margin:0 0 12px;display:flex;align-items:center;gap:10px;text-wrap:balance}
+h2 .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--pri);color:var(--pri-ink);display:grid;place-items:center;font-size:14px;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:780px){.cols{grid-template-columns:1fr}}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.stack{display:flex;flex-direction:column;gap:14px}
+label.t{display:block;font-weight:600;margin-bottom:6px;font-size:15px}
+.hint{color:var(--mut);font-size:14px}
+textarea,input[type=text],input[type=number],select{
+  width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);
+  border:1.5px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{min-height:150px;resize:vertical}
+textarea.short{min-height:76px}
+select{width:auto;min-width:150px}
+input[type=number]{width:74px;text-align:center}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+textarea:focus,input:focus,select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px color-mix(in srgb,var(--pri) 25%,transparent)}
+button{font:inherit;cursor:pointer;color:var(--ink)}
+.seg{display:inline-flex;background:var(--soft);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:8px 14px;border-radius:8px;font-weight:500;font-size:15px}
+.seg button[aria-pressed="true"]{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.18);font-weight:600;color:var(--ink)}
+.btn{border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:8px 14px;font-weight:500;font-size:15px}
+.btn:hover{border-color:var(--pri)}
+.btn.pri{background:var(--pri);color:var(--pri-ink);border-color:var(--pri);font-weight:600}
+.btn.small{padding:5px 10px;font-size:14px}
+.step{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
+.step button{border:0;background:var(--card);width:40px;font-size:20px;font-weight:600}
+.step button:hover{background:var(--soft)}
+.step input{border:0;border-radius:0;width:56px;background:transparent}
+.sw{display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:500}
+.sw input{width:20px;height:20px;accent-color:var(--pri);flex:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;background:var(--soft);border-radius:999px;overflow:hidden;font-size:14px}
+.chip button{border:0;background:transparent;padding:5px 12px;font-size:14px}
+.chip button.x{padding:5px 9px 5px 4px;color:var(--mut)}
+details{border:1.5px dashed var(--line);border-radius:10px;padding:10px 12px}
+summary{cursor:pointer;font-weight:600}
+details[open] summary{margin-bottom:10px}
+.go{width:100%;border:0;border-radius:12px;padding:15px;font:inherit;font-size:19px;font-weight:700;color:var(--pri-ink);background:var(--pri)}
+.go:hover{filter:brightness(1.08)}
+.go:active{transform:translateY(1px)}
+.count{color:var(--mut);font-size:14px;margin-top:8px}
+#msg{min-height:22px;font-size:15px;font-weight:500}
+#msg.err{color:#c0392b}
+:root[data-theme="dark"] #msg.err{color:#ff8a7a}
+.bar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:14px}
+.legend{display:flex;gap:14px;font-size:14px;color:var(--mut);align-items:center}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-inline-end:5px}
+.dot.b,li.b::before{background:#2f7fe0}
+.dot.f,li.f::before{background:#e0559a}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.g{background:hsl(var(--h) var(--gs) var(--gl));border:1px solid hsl(var(--h) 40% 60% / .35);border-top:6px solid hsl(var(--h) 65% var(--gb));border-radius:12px;padding:12px;color:var(--gt)}
+.ghead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.gname{flex:1;min-width:0;background:transparent;border:1.5px solid transparent;border-radius:8px;padding:4px 6px;font:inherit;font-weight:700;font-size:18px;color:inherit}
+.gname:hover{border-color:hsl(var(--h) 40% 60% / .5)}
+.gcount{flex:none;font-size:13px;font-weight:600;background:var(--card);border-radius:999px;padding:2px 9px;color:var(--mut)}
+.g ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.g li button{width:100%;text-align:start;display:flex;align-items:center;gap:8px;border:1.5px solid transparent;background:color-mix(in srgb,var(--card) 70%,transparent);border-radius:8px;padding:6px 9px;font-size:17px;color:inherit}
+.g li button:hover{border-color:hsl(var(--h) 60% var(--gb))}
+.g li button.sel{background:var(--sun);color:#1b1500;border-color:#1b1500}
+li.b button::before,li.f button::before{content:"";width:9px;height:9px;border-radius:50%;flex:none}
+li.b button::before{background:#2f7fe0}
+li.f button::before{background:#e0559a}
+li::before{content:none!important}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:420px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:center}
+th{color:#fff}
+.hide{display:none!important}
+.big .g li button{font-size:26px;padding:10px 12px}
+.big .gname{font-size:26px}
+.big .grid{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
+.big td,.big th{font-size:24px}
+.tip{color:var(--mut);font-size:14px;margin:12px 0 0}
+@media (prefers-reduced-motion:no-preference){.g{animation:pop .3s both}@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>מחלק הקבוצות</h1>
+    <p class="sub">מדביקים את רשימת הכיתה, בוחרים כמה קבוצות, ומקבלים חלוקה הוגנת בלחיצה אחת.</p>
+  </header>
+
+  <section class="card" aria-labelledby="h-names">
+    <h2 id="h-names"><span class="n">1</span>מי בכיתה?</h2>
+    <div class="row" style="justify-content:space-between;margin-bottom:12px">
+      <div class="seg" role="group" aria-label="סוג רשימה">
+        <button id="m1" aria-pressed="true">רשימה אחת</button>
+        <button id="m2" aria-pressed="false">בנים ובנות בנפרד</button>
+      </div>
+      <div class="row">
+        <label class="btn small" for="file" style="cursor:pointer">ייבוא מקובץ טקסט או CSV</label>
+        <input id="file" type="file" accept=".txt,.csv,text/plain,text/csv" class="hide">
+        <button class="btn small" id="clearNames">ניקוי</button>
+      </div>
+    </div>
+    <div id="one">
+      <label class="t" for="all">שמות, כל שם בשורה או מופרדים בפסיקים</label>
+      <textarea id="all" placeholder="דנה&#10;יוסי&#10;נועה&#10;עומר"></textarea>
+    </div>
+    <div id="gen" class="cols hide">
+      <div><label class="t" for="boys">בנים</label><textarea id="boys"></textarea></div>
+      <div><label class="t" for="girls">בנות</label><textarea id="girls"></textarea></div>
+    </div>
+    <div class="count" id="count" aria-live="polite"></div>
+
+    <div style="margin-top:14px" class="stack">
+      <div>
+        <div class="hint" style="margin-bottom:6px">כיתות שמורות במכשיר הזה</div>
+        <div class="row">
+          <input type="text" id="className" placeholder="שם לכיתה, למשל ח'2" style="max-width:220px" aria-label="שם הכיתה לשמירה">
+          <button class="btn small" id="saveClass">שמירת הרשימה</button>
+        </div>
+        <div class="chips" id="classes" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-set">
+    <h2 id="h-set"><span class="n">2</span>איך לחלק?</h2>
+    <div class="cols">
+      <div class="stack">
+        <div>
+          <div class="seg" role="group" aria-label="שיטת חלוקה" style="margin-bottom:10px">
+            <button id="bySize" aria-pressed="true">לפי גודל קבוצה</button>
+            <button id="byCount" aria-pressed="false">לפי מספר קבוצות</button>
+          </div>
+          <div class="row">
+            <span id="numLabel" class="t" style="margin:0;font-weight:600">כמה תלמידים בקבוצה?</span>
+            <div class="step">
+              <button id="plus" aria-label="הוסף אחד">+</button>
+              <input id="num" type="number" min="2" max="60" value="4" aria-labelledby="numLabel">
+              <button id="minus" aria-label="הפחת אחד">−</button>
+            </div>
+          </div>
+          <div class="hint" style="margin-top:8px">ההפרש בין הקבוצות הוא תמיד אחד לכל היותר, אין קבוצה בודדה.</div>
+        </div>
+        <div>
+          <label class="t" for="style">שמות לקבוצות</label>
+          <select id="style">
+            <option value="num">קבוצה 1, קבוצה 2…</option>
+            <option value="col">צבעים</option>
+            <option value="ani">חיות</option>
+          </select>
+        </div>
+      </div>
+      <div class="stack">
+        <label class="sw hide" id="balw"><input type="checkbox" id="bal" checked>איזון בנים ובנות בכל קבוצה</label>
+        <label class="sw"><input type="checkbox" id="nr" checked>בלי חזרות על חלוקות קודמות</label>
+        <details id="sepBox">
+          <summary>תלמידים שלא יהיו יחד</summary>
+          <label class="t hint" for="sep">שורה לכל הפרדה. כל השמות באותה שורה יופרדו זה מזה.</label>
+          <textarea id="sep" class="short" placeholder="דנה, יוסי&#10;נועה, עומר, מאיה"></textarea>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <button class="go" id="go">חלק לקבוצות</button>
+  <div id="msg" role="status" aria-live="polite"></div>
+
+  <section id="res" class="card hide" aria-labelledby="h-res">
+    <h2 id="h-res"><span class="n">3</span>התוצאה</h2>
+    <div class="bar">
+      <div class="row">
+        <div class="seg" role="group" aria-label="תצוגה">
+          <button id="vc" aria-pressed="true">כרטיסים</button>
+          <button id="vt" aria-pressed="false">טבלה</button>
+        </div>
+        <label class="sw" style="font-size:15px"><input type="checkbox" id="bigv">תצוגה גדולה למקרן</label>
+      </div>
+      <div class="row">
+        <button class="btn" id="again">ערבוב מחדש</button>
+        <button class="btn" id="copy">העתקה</button>
+        <button class="btn pri hide" id="docx">הורדה כקובץ Word</button>
+        <button class="btn" id="reset">איפוס היסטוריה</button>
+      </div>
+    </div>
+    <div class="legend hide" id="legend"><span><i class="dot b"></i>בן</span><span><i class="dot f"></i>בת</span></div>
+    <div id="cards" class="grid" style="margin-top:6px"></div>
+    <div id="tbl" class="tw hide"></div>
+    <div class="tip" id="info"></div>
+    <p class="tip">להחלפה בין שני תלמידים לוחצים על שם אחד ואחר כך על שם אחר. אפשר לשנות שם של קבוצה ישירות בכותרת שלה.</p>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const HUES=[205,355,145,45,275,25,330,185];
+const COLN=["כחולה","אדומה","ירוקה","צהובה","סגולה","כתומה","ורודה","תכלת"];
+const ANIM=["האריות","הנמרים","הדולפינים","הנשרים","הפילים","הפנדות","הזאבים","הינשופים"];
+
+let mode=1,by="size",num=4,groups=[],gnames=[],gmap={},history={},sel=null,lastStyle="",hasView="c";
+
+/* ---------- storage ---------- */
+function load(){try{return JSON.parse(localStorage.getItem("gs2")||"{}")}catch(e){return {}}}
+function store(o){try{localStorage.setItem("gs2",JSON.stringify(o))}catch(e){}}
+function snapshot(){return {a:$("all").value,b:$("boys").value,g:$("girls").value,s:$("sep").value,m:mode}}
+function saveDraft(){const o=load();o.draft=snapshot();store(o)}
+function applySnap(d){
+  $("all").value=d.a||"";$("boys").value=d.b||"";$("girls").value=d.g||"";$("sep").value=d.s||"";
+  setMode(d.m||1);
+  if(d.s)$("sepBox").open=true;
+}
+function renderClasses(){
+  const c=load().classes||{};const box=$("classes");box.innerHTML="";
+  Object.keys(c).forEach(k=>{
+    const el=document.createElement("span");el.className="chip";
+    const b=document.createElement("button");b.textContent=k;b.onclick=()=>{applySnap(c[k]);say("נטענה הרשימה "+k)};
+    const x=document.createElement("button");x.className="x";x.textContent="✕";x.setAttribute("aria-label","מחיקת "+k);
+    x.onclick=()=>{const o=load();delete o.classes[k];store(o);renderClasses()};
+    el.append(b,x);box.append(el);
+  });
+}
+
+/* ---------- names ---------- */
+function parse(t){return [...new Set(t.split(/[\n,;،]+/).map(s=>s.trim()).filter(Boolean))]}
+function names(){
+  gmap={};
+  if(mode===1){return parse($("all").value)}
+  const b=parse($("boys").value),g=parse($("girls").value).filter(n=>!b.includes(n));
+  b.forEach(n=>gmap[n]="b");g.forEach(n=>gmap[n]="f");
+  return {b,g};
+}
+function total(){const x=names();return mode===1?x.length:x.b.length+x.g.length}
+function updCount(){$("count").textContent="סה״כ "+total()+" שמות";saveDraft()}
+function say(t,err){const m=$("msg");m.textContent=t;m.className=err?"err":""}
+
+/* ---------- splitting ---------- */
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function deal(list,k,start,gs){let p=start;list.forEach(n=>{gs[p%k].push(n);p++});return p}
+function build(k,x){
+  const gs=Array.from({length:k},()=>[]);
+  if(mode===1)deal(shuffle(x),k,0,gs);
+  else if($("bal").checked){const p=deal(shuffle(x.b),k,0,gs);deal(shuffle(x.g),k,p,gs)}
+  else deal(shuffle(x.b.concat(x.g)),k,0,gs);
+  return gs;
+}
+function sepSet(){
+  const set=new Set();
+  $("sep").value.split("\n").forEach(line=>{
+    const p=line.split(/[,;،]+/).map(s=>s.trim()).filter(Boolean);
+    for(let i=0;i<p.length;i++)for(let j=i+1;j<p.length;j++)set.add([p[i],p[j]].sort().join("|"));
+  });
+  return set;
+}
+function pairs(gs,fn){gs.forEach(g=>{for(let i=0;i<g.length;i++)for(let j=i+1;j<g.length;j++)fn([g[i],g[j]].sort().join("|"))})}
+function violations(gs,sep){let v=0;if(sep.size)pairs(gs,k=>{if(sep.has(k))v++});return v}
+function repeats(gs){let s=0;pairs(gs,k=>{s+=history[k]||0});return s}
+function makeNames(k,style){
+  return Array.from({length:k},(_,i)=>{
+    const r=Math.floor(i/8)>0?" "+(Math.floor(i/8)+1):"";
+    if(style==="col")return "קבוצה "+COLN[i%8]+r;
+    if(style==="ani")return ANIM[i%8]+r;
+    return "קבוצה "+(i+1);
+  });
+}
+function split(){
+  const x=names(),n=total();
+  if(n<2){say("הכניסו לפחות שני שמות.",true);return}
+  let k=by==="size"?Math.round(n/num):num;
+  k=Math.min(Math.max(1,k),n);
+  const sep=sepSet(),useHist=$("nr").checked;
+  const tries=(useHist||sep.size)?600:1;
+  let best=null,bv=1e12,bViol=0,bRep=0;
+  for(let i=0;i<tries&&bv>0;i++){
+    const g=build(k,x),v=violations(g,sep),r=useHist?repeats(g):0,s=v*1000+r;
+    if(s<bv){bv=s;best=g;bViol=v;bRep=r}
+  }
+  best=shuffle(best);
+  pairs(best,key=>{history[key]=(history[key]||0)+1});
+  groups=best;sel=null;
+  const style=$("style").value;
+  if(gnames.length!==k||lastStyle!==style){gnames=makeNames(k,style);lastStyle=style}
+  const sizes=groups.map(g=>g.length),mn=Math.min(...sizes),mx=Math.max(...sizes);
+  let info=k+" קבוצות, "+(mn===mx?mn+" תלמידים בכל קבוצה":"בין "+mn+" ל-"+mx+" תלמידים בקבוצה");
+  if(bViol>0)info+=". לא הצלחתי לקיים את כל ההפרדות, כדאי לנסות ערבוב מחדש.";
+  else if(bRep>0)info+=". חלק מהזוגות כבר היו יחד, אין מספיק אפשרויות חדשות.";
+  $("info").textContent=info;
+  say("");
+  render(true);
+}
+
+/* ---------- rendering ---------- */
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function render(scroll){
+  $("res").classList.remove("hide");
+  $("legend").classList.toggle("hide",mode!==2);
+  $("cards").innerHTML=groups.map((g,gi)=>
+    `<div class="g" style="--h:${HUES[gi%8]};animation-delay:${gi*40}ms">
+      <div class="ghead"><input class="gname" data-g="${gi}" value="${esc(gnames[gi])}" aria-label="שם קבוצה ${gi+1}"><span class="gcount">${g.length}</span></div>
+      <ol>${g.map((n,i)=>`<li class="${gmap[n]||""}"><button data-g="${gi}" data-i="${i}" class="${sel&&sel.g===gi&&sel.i===i?"sel":""}">${esc(n)}</button></li>`).join("")}</ol>
+    </div>`).join("");
+  renderTable();
+  if(scroll)$("res").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function renderTable(){
+  const rows=Math.max(...groups.map(g=>g.length));
+  let t="<table><thead><tr>"+groups.map((g,i)=>`<th style="background:${hexOf(HUES[i%8],.55,.36)}">${esc(gnames[i])}</th>`).join("")+"</tr></thead><tbody>";
+  for(let r=0;r<rows;r++)t+="<tr>"+groups.map(g=>`<td>${g[r]?esc(g[r]):""}</td>`).join("")+"</tr>";
+  $("tbl").innerHTML=t+"</tbody></table>";
+}
+function setView(c){
+  $("cards").classList.toggle("hide",!c);$("tbl").classList.toggle("hide",c);
+  $("vc").setAttribute("aria-pressed",c);$("vt").setAttribute("aria-pressed",!c);
+}
+function setMode(m){
+  mode=m;$("m1").setAttribute("aria-pressed",m===1);$("m2").setAttribute("aria-pressed",m===2);
+  $("one").classList.toggle("hide",m===2);$("gen").classList.toggle("hide",m===1);$("balw").classList.toggle("hide",m===1);
+  updCount();
+}
+function setBy(b){
+  by=b;$("bySize").setAttribute("aria-pressed",b==="size");$("byCount").setAttribute("aria-pressed",b==="count");
+  $("numLabel").textContent=b==="size"?"כמה תלמידים בקבוצה?":"כמה קבוצות?";
+  num=b==="size"?4:4;$("num").value=num;
+}
+function setNum(v){v=Math.max(2,Math.min(60,Math.round(+v)||2));num=v;$("num").value=v}
+
+/* ---------- events ---------- */
+$("m1").onclick=()=>setMode(1);$("m2").onclick=()=>setMode(2);
+["all","boys","girls","sep"].forEach(i=>$(i).addEventListener("input",updCount));
+$("bySize").onclick=()=>setBy("size");$("byCount").onclick=()=>setBy("count");
+$("plus").onclick=()=>setNum(num+1);$("minus").onclick=()=>setNum(num-1);
+$("num").oninput=e=>{const v=+e.target.value;if(v>=2)num=Math.min(60,Math.round(v))};
+$("num").onchange=()=>setNum($("num").value);
+$("go").onclick=split;$("again").onclick=split;
+$("vc").onclick=()=>setView(true);$("vt").onclick=()=>setView(false);
+$("bigv").onchange=e=>document.body.classList.toggle("big",e.target.checked);
+$("reset").onclick=()=>{history={};say("ההיסטוריה אופסה, החלוקה הבאה לא תתחשב בחלוקות קודמות.")};
+$("clearNames").onclick=()=>{$("all").value="";$("boys").value="";$("girls").value="";updCount()};
+$("saveClass").onclick=()=>{
+  const nm=$("className").value.trim();
+  if(!nm){say("כתבו שם לכיתה כדי לשמור אותה.",true);return}
+  const o=load();o.classes=o.classes||{};o.classes[nm]=snapshot();store(o);
+  $("className").value="";renderClasses();say("הרשימה נשמרה בשם "+nm+" במכשיר הזה.");
+};
+$("file").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    const txt=String(r.result).replace(/^﻿/,"");
+    const target=mode===1?$("all"):$("boys");
+    target.value=(target.value?target.value.trim()+"\n":"")+txt.split(/\r?\n/).map(l=>l.split(",")[0]).join("\n");
+    updCount();say("הקובץ נטען.");e.target.value="";
+  };
+  r.readAsText(f,"utf-8");
+};
+$("cards").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-g]");if(!b)return;
+  const g=+b.dataset.g,i=+b.dataset.i;
+  if(!sel){sel={g,i}}
+  else if(sel.g===g&&sel.i===i){sel=null}
+  else{const t=groups[sel.g][sel.i];groups[sel.g][sel.i]=groups[g][i];groups[g][i]=t;sel=null}
+  render(false);
+});
+$("cards").addEventListener("input",e=>{
+  if(e.target.classList.contains("gname")){gnames[+e.target.dataset.g]=e.target.value;renderTable()}
+});
+function textOut(){return groups.map((g,i)=>gnames[i]+":\n"+g.map(n=>"- "+n).join("\n")).join("\n\n")}
+$("copy").onclick=()=>{
+  const txt=textOut();
+  const ok=()=>{$("copy").textContent="הועתק";setTimeout(()=>$("copy").textContent="העתקה",1500)};
+  const fb=()=>{const t=document.createElement("textarea");t.value=txt;document.body.appendChild(t);t.select();try{document.execCommand("copy");ok()}catch(e){}t.remove()};
+  try{navigator.clipboard.writeText(txt).then(ok,fb)}catch(e){fb()}
+};
+
+/* ---------- Word export ---------- */
+function hexOf(h,s,l){
+  const a=s*Math.min(l,1-l),f=n=>{const k=(n+h/30)%12;const c=l-a*Math.max(-1,Math.min(k-3,9-k,1));return Math.round(255*c).toString(16).padStart(2,"0")};
+  return "#"+f(0)+f(8)+f(4);
+}
+const hx=(h,s,l)=>hexOf(h,s,l).slice(1).toUpperCase();
+function xesc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function para(text,o={}){
+  const sz=o.sz||28;
+  return `<w:p><w:pPr><w:bidi/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>${o.b?"<w:b/><w:bCs/>":""}${o.color?`<w:color w:val="${o.color}"/>`:""}<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/><w:rtl/></w:rPr><w:t xml:space="preserve">${xesc(text)}</w:t></w:r></w:p>`;
+}
+function cell(inner,w,fill){
+  return `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/><w:shd w:val="clear" w:color="auto" w:fill="${fill}"/></w:tcPr>${inner}</w:tc>`;
+}
+async function makeDocx(){
+  const PER=8,W=15398;let body="";
+  const date=new Date().toLocaleDateString("he-IL");
+  body+=para("חלוקה לקבוצות",{b:1,sz:40});
+  body+=para(date+" · "+total()+" תלמידים · "+groups.length+" קבוצות",{sz:24,color:"586A76"});
+  body+="<w:p/>";
+  for(let s=0;s<groups.length;s+=PER){
+    const idx=groups.map((_,i)=>i).slice(s,s+PER),w=Math.floor(W/idx.length);
+    const bd=["top","left","bottom","right","insideH","insideV"].map(e=>`<w:${e} w:val="single" w:sz="6" w:space="0" w:color="B8C6CF"/>`).join("");
+    let t=`<w:tbl><w:tblPr><w:bidiVisual/><w:tblW w:w="${w*idx.length}" w:type="dxa"/><w:tblBorders>${bd}</w:tblBorders></w:tblPr><w:tblGrid>${idx.map(()=>`<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>`;
+    t+="<w:tr><w:trPr><w:tblHeader/></w:trPr>"+idx.map(i=>cell(para(gnames[i],{b:1,sz:30,color:"FFFFFF"}),w,hx(HUES[i%8],.55,.36))).join("")+"</w:tr>";
+    const rows=Math.max(...idx.map(i=>groups[i].length));
+    for(let r=0;r<rows;r++){
+      t+="<w:tr>"+idx.map(i=>{const n=groups[i][r];return cell(n?para(n,{sz:28}):"<w:p/>",w,hx(HUES[i%8],.7,.95))}).join("")+"</w:tr>";
+    }
+    body+=t+"</w:tbl><w:p/>";
+  }
+  const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="360" w:footer="360" w:gutter="0"/><w:bidi/></w:sectPr></w:body></w:document>`;
+  const zip=new JSZip();
+  zip.file("[Content_Types].xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);
+  zip.file("_rels/.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+  zip.file("word/document.xml",doc);
+  return zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+}
+let dl=null;
+async function saveFile(name,blob){
+  if(dl)return dl.save({filename:name,data:blob});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+$("docx").onclick=async()=>{
+  if(!groups.length||typeof JSZip==="undefined"){say("ההורדה לא זמינה כרגע.",true);return}
+  try{
+    const blob=await makeDocx();
+    await saveFile("חלוקה-לקבוצות.docx",blob);
+    say("הקובץ מוכן.");
+  }catch(err){
+    if(err&&err.code==="declined")return;
+    say("לא הצלחתי לשמור את הקובץ. אפשר להשתמש בהעתקה.",true);
+  }
+};
+$("docx").classList.remove("hide");
+if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+
+/* ---------- start ---------- */
+const d=load().draft;
+if(d)applySnap(d);else updCount();
+renderClasses();
+</script>
+</body>
+</html>
