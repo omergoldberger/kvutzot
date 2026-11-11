@@ -1,0 +1,38 @@
+name: Build Windows app
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - ".github/workflows/windows-app.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prepare app files
+        shell: bash
+        run: |
+          mkdir -p app/www
+          cp index.html manifest.webmanifest icon.svg app/www/
+          cd app
+          npm install
+          cp node_modules/jszip/dist/jszip.min.js www/
+          sed -i 's#https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js#jszip.min.js#' www/index.html
+      - name: Build exe
+        working-directory: app
+        run: npm run dist
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: app-latest
+          name: אפליקציה ל-Windows
+          body: קובץ אחד, פותחים בלחיצה כפולה.
+          files: app/dist/kvutzot-app.exe
+          make_latest: true
