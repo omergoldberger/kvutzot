@@ -1,0 +1,28 @@
+{
+  "name": "mechalek-kvutzot",
+  "productName": "מחלק הקבוצות",
+  "version": "1.0.0",
+  "description": "מחלק קבוצות לכיתה",
+  "main": "main.js",
+  "author": "Yael",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never"
+  },
+  "build": {
+    "appId": "com.yael.kvutzot",
+    "productName": "מחלק הקבוצות",
+    "artifactName": "kvutzot-app.exe",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "www/**/*"],
+    "win": {
+      "target": [{ "target": "portable", "arch": ["x64"] }]
+    }
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8",
+    "jszip": "3.10.1"
+  }
+}
